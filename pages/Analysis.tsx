@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, 
-  Line, ReferenceDot, CartesianGrid
+  Line, ReferenceDot, CartesianGrid, BarChart, Bar, ReferenceLine
 } from 'recharts';
 import { 
   getCompetitorsForProduct, 
@@ -29,6 +29,15 @@ const METRICS = [
   { label: '市场份额占比', key: 'marketShare' },
   { label: '近1月收益率', key: 'change1M' },
   { label: '近1月净流入', key: 'inflow1M' },
+];
+
+// Mock data for the inflow chart
+const MOCK_INFLOW_DATA = [
+  { date: '11-27', value: -12500 },
+  { date: '11-28', value: 6800 },
+  { date: '12-01', value: -18000 },
+  { date: '12-02', value: -7200 },
+  { date: '12-03', value: -3500 },
 ];
 
 const Analysis: React.FC = () => {
@@ -121,25 +130,92 @@ const Analysis: React.FC = () => {
     const values = chartData.map(d => d.value);
     const min = Math.min(...values);
     const max = Math.max(...values);
-    const padding = (max - min) * 0.1;
+    const padding = (max - min) * 0.02; // Reduced padding
     return [min - padding, max + padding];
   }, [chartData]);
 
   // Tooltips
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const data = payload[0].payload;
+
+      // 1. Comparison Mode or Historical Mode -> Standard List View
+      if (showCompetitor || timeRange !== '实时') {
+        return (
+          <div className="bg-white p-3 border border-slate-200 shadow-lg rounded text-xs z-50">
+            <p className="font-bold text-slate-700 mb-2">{label}</p>
+            {payload.map((p: any, i: number) => (
+              <div key={i} className="flex items-center justify-between gap-4 mb-1">
+                <span style={{ color: p.color }}>{p.name}:</span>
+                <span className="font-mono font-medium">
+                  {typeof p.value === 'number' ? p.value.toFixed(3) : p.value}
+                  {timeRange !== '实时' && '%'}
+                </span>
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      // 2. Real-time Single View -> Enhanced Dashboard View
+      const price = data.value;
+      const iopv = data.iopv;
+      const volume = data.volume;
+      const change = price - preClose;
+      const changePct = (change / preClose) * 100;
+      
+      const isUp = change >= 0;
+      const colorClass = isUp ? 'text-red-500' : 'text-green-500';
+      const sign = isUp ? '+' : '';
+
       return (
-        <div className="bg-white p-3 border border-slate-200 shadow-lg rounded text-xs z-50">
-          <p className="font-bold text-slate-700 mb-2">{label}</p>
-          {payload.map((p: any, i: number) => (
-            <div key={i} className="flex items-center justify-between gap-4 mb-1">
-              <span style={{ color: p.color }}>{p.name}:</span>
-              <span className="font-mono font-medium">
-                {typeof p.value === 'number' ? p.value.toFixed(3) : p.value}
-                {timeRange !== '实时' && '%'}
-              </span>
-            </div>
-          ))}
+        <div className="bg-white p-4 border border-slate-200 shadow-xl rounded-md text-xs z-50 min-w-[180px]">
+          <p className="font-bold text-slate-500 mb-3 font-mono text-sm">{label}</p>
+          
+          {/* Price Section */}
+          <div className="space-y-2 mb-3">
+             <div className="flex justify-between items-center gap-6">
+               <span className="text-slate-500 font-bold">我司价格:</span>
+               <span className="font-mono font-bold text-slate-800 text-sm">{price.toFixed(3)}</span>
+             </div>
+             <div className="flex justify-between items-center gap-6">
+               <span className="text-slate-500 font-bold">IOPV:</span>
+               <span className="font-mono font-bold text-slate-500 text-sm">{iopv.toFixed(3)}</span>
+             </div>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-slate-100 my-3"></div>
+
+          {/* Metrics Section */}
+          <div className="space-y-2">
+             <div className="flex justify-between items-center gap-6">
+               <span className="text-slate-500 font-bold">涨跌:</span>
+               <span className={`font-mono font-bold text-sm ${colorClass}`}>{sign}{change.toFixed(3)}</span>
+             </div>
+             <div className="flex justify-between items-center gap-6">
+               <span className="text-slate-500 font-bold">涨跌幅:</span>
+               <span className={`font-mono font-bold text-sm ${colorClass}`}>{sign}{changePct.toFixed(2)}%</span>
+             </div>
+             <div className="flex justify-between items-center gap-6">
+               <span className="text-slate-500 font-bold">成交额:</span>
+               <span className="font-mono font-bold text-slate-800 text-sm">{volume}万</span>
+             </div>
+          </div>
+
+          {/* Trigger Info (Only on Trigger Point) */}
+          {data.isTrigger && hotspot && (
+             <div className="mt-3 pt-3 border-t border-slate-100 animate-in fade-in slide-in-from-top-1">
+                <div className="flex items-center gap-2 mb-1">
+                   <TrendingUp className="w-3 h-3 text-red-500" />
+                   <span className="font-bold text-red-500">触发热点</span>
+                </div>
+                <div className="bg-red-50 border border-red-100 rounded px-2 py-1.5">
+                   <p className="font-bold text-slate-700 mb-0.5">{hotspot.triggerReason}</p>
+                   <p className="text-[10px] text-slate-500">{hotspot.metricValue}</p>
+                </div>
+             </div>
+          )}
         </div>
       );
     }
@@ -149,7 +225,7 @@ const Analysis: React.FC = () => {
   // Render function for the Trigger Bubble using pure SVG
   const renderTriggerLabel = (props: any) => {
     const { x, y } = props;
-    if (!x || !y) return null;
+    if (typeof x !== 'number' || typeof y !== 'number') return null;
 
     const reason = hotspot?.triggerReason || '异动触发';
     const time = hotspot?.time || '';
@@ -158,33 +234,58 @@ const Analysis: React.FC = () => {
     const bubbleWidth = 96;
     const bubbleHeight = 36;
     const arrowSize = 6;
-    const verticalOffset = 8; // Distance from dot center to arrow tip
+    const verticalOffset = 6; 
 
-    // Calculate top-left of the bubble rect
-    const rectY = y - verticalOffset - arrowSize - bubbleHeight;
-    const rectX = x - bubbleWidth / 2;
+    // Determine position based on y-coordinate to prevent clipping
+    // Chart top margin is 20px. If y < 80, render bubble below.
+    const isNearTop = y < 80;
+
+    let rectX = x - bubbleWidth / 2;
+    let rectY;
+    let pathD;
+
+    if (isNearTop) {
+        // Render BELOW the dot (Arrow points UP)
+        rectY = y + verticalOffset + arrowSize;
+        pathD = `
+            M ${rectX + 4},${rectY}
+            H ${x - arrowSize}
+            L ${x},${y + verticalOffset}
+            L ${x + arrowSize},${rectY}
+            H ${rectX + bubbleWidth - 4}
+            Q ${rectX + bubbleWidth},${rectY} ${rectX + bubbleWidth},${rectY + 4}
+            V ${rectY + bubbleHeight - 4}
+            Q ${rectX + bubbleWidth},${rectY + bubbleHeight} ${rectX + bubbleWidth - 4},${rectY + bubbleHeight}
+            H ${rectX + 4}
+            Q ${rectX},${rectY + bubbleHeight} ${rectX},${rectY + bubbleHeight - 4}
+            V ${rectY + 4}
+            Q ${rectX},${rectY} ${rectX + 4},${rectY}
+            Z
+        `;
+    } else {
+        // Render ABOVE the dot (Arrow points DOWN) - Standard
+        rectY = y - verticalOffset - arrowSize - bubbleHeight;
+        pathD = `
+            M ${rectX + 4},${rectY} 
+            H ${rectX + bubbleWidth - 4} 
+            Q ${rectX + bubbleWidth},${rectY} ${rectX + bubbleWidth},${rectY + 4} 
+            V ${rectY + bubbleHeight - 4} 
+            Q ${rectX + bubbleWidth},${rectY + bubbleHeight} ${rectX + bubbleWidth - 4},${rectY + bubbleHeight} 
+            H ${x + arrowSize} 
+            L ${x},${y - verticalOffset} 
+            L ${x - arrowSize},${rectY + bubbleHeight} 
+            H ${rectX + 4} 
+            Q ${rectX},${rectY + bubbleHeight} ${rectX},${rectY + bubbleHeight - 4} 
+            V ${rectY + 4} 
+            Q ${rectX},${rectY} ${rectX + 4},${rectY} 
+            Z
+        `;
+    }
 
     return (
       <g style={{ pointerEvents: 'none' }}>
         <g filter="url(#bubble-shadow)">
-            <path 
-              d={`
-                M ${rectX + 4},${rectY} 
-                H ${rectX + bubbleWidth - 4} 
-                Q ${rectX + bubbleWidth},${rectY} ${rectX + bubbleWidth},${rectY + 4} 
-                V ${rectY + bubbleHeight - 4} 
-                Q ${rectX + bubbleWidth},${rectY + bubbleHeight} ${rectX + bubbleWidth - 4},${rectY + bubbleHeight} 
-                H ${x + arrowSize} 
-                L ${x},${rectY + bubbleHeight + arrowSize} 
-                L ${x - arrowSize},${rectY + bubbleHeight} 
-                H ${rectX + 4} 
-                Q ${rectX},${rectY + bubbleHeight} ${rectX},${rectY + bubbleHeight - 4} 
-                V ${rectY + 4} 
-                Q ${rectX},${rectY} ${rectX + 4},${rectY} 
-                Z
-              `} 
-              fill="#ef4444" 
-            />
+            <path d={pathD} fill="#ef4444" />
         </g>
         
         {/* Text Content */}
@@ -254,236 +355,229 @@ const Analysis: React.FC = () => {
         
         {/* Left Column: Chart (Larger) */}
         <div className="col-span-12 lg:col-span-7 space-y-4">
-          <div className="bg-white rounded-md border border-slate-200 shadow-sm p-5 h-[500px] flex flex-col">
-            <h2 className="text-sm font-bold text-slate-800 mb-4">业绩走势</h2>
+          <div className={`bg-white rounded-md border border-slate-200 shadow-sm flex flex-col ${timeRange === '实时' ? 'h-[500px]' : 'h-[300px]'}`}>
             
-            {/* Chart Header Logic: Real-time vs Historical */}
-            {timeRange === '实时' ? (
-              // === REAL-TIME HEADER ===
-              <div className="flex items-center gap-8 mb-4 h-8">
-                 {/* Price Block */}
-                 <div className="flex items-center gap-2">
-                   <span className="w-3 h-1 bg-[#0e57b4] rounded-full"></span>
-                   <span className="text-sm font-bold text-slate-600">价格:</span>
-                   <span className="text-lg font-bold font-mono text-slate-800 tracking-tight">
-                      {currentPrice.toFixed(3)}
-                   </span>
-                   <span className={`text-sm font-bold ml-1 ${priceChange >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                      {priceChange > 0 ? '+' : ''}{priceChangePct.toFixed(2)}%
-                   </span>
-                 </div>
+            {/* Top Content (Title, Header, Chart) */}
+            <div className="p-5 flex-1 flex flex-col min-h-0">
+                <h2 className="text-sm font-bold text-slate-800 mb-4">业绩走势</h2>
+                
+                {/* Chart Header Logic: Real-time vs Historical */}
+                {timeRange === '实时' ? (
+                  // === REAL-TIME HEADER ===
+                  <div className="flex items-center gap-8 mb-4 h-8">
+                    {/* Price Block */}
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-1 bg-[#0e57b4] rounded-full"></span>
+                      <span className="text-sm font-bold text-slate-600">价格:</span>
+                      <span className="text-lg font-bold font-mono text-slate-800 tracking-tight">
+                          {currentPrice.toFixed(3)}
+                      </span>
+                      <span className={`text-sm font-bold ml-1 ${priceChange >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                          {priceChange > 0 ? '+' : ''}{priceChangePct.toFixed(2)}%
+                      </span>
+                    </div>
 
-                 {/* IOPV Block (Only when no competitor) */}
-                 {!showCompetitor && (
-                   <div className="flex items-center gap-2">
-                       <span className="w-3 h-1 bg-[#fbbf24] rounded-full"></span>
-                       <span className="text-sm font-bold text-slate-500">IOPV:</span>
-                       <span className="text-lg font-normal font-mono text-slate-500 tracking-tight">
-                          {currentIOPV.toFixed(3)}
-                       </span>
-                       <span className="text-xs text-slate-400 cursor-help" title="实时估值参考">ⓘ</span>
-                   </div>
-                 )}
+                    {/* IOPV Block (Only when no competitor) */}
+                    {!showCompetitor && (
+                      <div className="flex items-center gap-2">
+                          <span className="w-3 h-1 bg-[#fbbf24] rounded-full"></span>
+                          <span className="text-sm font-bold text-slate-500">IOPV:</span>
+                          <span className="text-lg font-normal font-mono text-slate-500 tracking-tight">
+                              {currentIOPV.toFixed(3)}
+                          </span>
+                          <span className="text-xs text-slate-400 cursor-help" title="实时估值参考">ⓘ</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // === HISTORICAL HEADER ===
+                  <div className="flex items-center gap-6 mb-4 h-8">
+                    <div className="flex items-center gap-2">
+                        <span className="w-3 h-1 bg-[#0e57b4] rounded-full"></span>
+                        <span className="text-sm font-bold text-slate-600">区间收益率:</span>
+                        <span className={`text-lg font-bold font-mono tracking-tight ${histMetrics?.change && histMetrics.change >= 0 ? 'text-red-500' : 'text-green-500'}`}>
+                          {histMetrics?.change && histMetrics.change > 0 ? '+' : ''}{histMetrics?.change?.toFixed(2)}%
+                        </span>
+                    </div>
+                    <div className="text-xs text-slate-400 font-mono self-center mt-1">
+                        {histMetrics?.start} ~ {histMetrics?.end}
+                    </div>
+                  </div>
+                )}
 
-                 {/* Competitor Legend (Only when competitor selected) */}
-                 {showCompetitor && (
-                   <div className="flex items-center gap-2 opacity-60">
-                       <span className="w-3 h-1 bg-slate-400 rounded-full"></span>
-                       <span className="text-sm font-bold text-slate-500">竞品:</span>
-                       <span className="text-lg font-bold font-mono text-slate-300 tracking-widest">
-                          ...
-                       </span>
-                   </div>
-                 )}
-              </div>
-            ) : (
-              // === HISTORICAL HEADER ===
-              <div className="flex items-center gap-6 mb-4 h-8">
-                 <div className="flex items-center gap-2">
-                    <span className="w-3 h-1 bg-[#0e57b4] rounded-full"></span>
-                    <span className="text-sm font-bold text-slate-600">区间收益率:</span>
-                    <span className={`text-lg font-bold font-mono tracking-tight ${histMetrics?.change && histMetrics.change >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                       {histMetrics?.change && histMetrics.change > 0 ? '+' : ''}{histMetrics?.change?.toFixed(2)}%
-                    </span>
-                 </div>
-                 <div className="text-xs text-slate-400 font-mono self-center mt-1">
-                    {histMetrics?.start} ~ {histMetrics?.end}
-                 </div>
-              </div>
-            )}
+                {/* Chart Area */}
+                <div className="flex-1 w-full min-h-0 relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                      {timeRange === '实时' ? (
+                        <AreaChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
+                              <stop offset="100%" stopColor="#ffffff" stopOpacity={0.05}/>
+                            </linearGradient>
+                            <filter id="bubble-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                              <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.2"/>
+                            </filter>
+                          </defs>
+                          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
+                          
+                          {/* X Axis */}
+                          <XAxis 
+                            dataKey="time" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{fontSize: 11, fill: '#94a3b8'}} 
+                            ticks={['09:30', '11:30', '15:00']}
+                            tickFormatter={formatXAxis}
+                          />
+                          
+                          {/* Left Y Axis: Price */}
+                          <YAxis 
+                            yAxisId="left"
+                            domain={yDomain} 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{fontSize: 11, fill: '#94a3b8'}} 
+                            tickFormatter={(val) => val.toFixed(3)}
+                            width={50}
+                          />
+                          
+                          {/* Right Y Axis: Percentage */}
+                          {!showCompetitor && (
+                            <YAxis 
+                              yAxisId="right"
+                              orientation="right"
+                              domain={[
+                                (dataMin: number) => (dataMin - preClose) / preClose,
+                                (dataMax: number) => (dataMax - preClose) / preClose
+                              ]}
+                              axisLine={false} 
+                              tickLine={false} 
+                              tick={{fontSize: 11, fill: '#94a3b8'}} 
+                              tickFormatter={(val) => `${(val * 100).toFixed(2)}%`}
+                              width={45}
+                            />
+                          )}
 
-            {/* Chart Area */}
-            <div className="flex-1 w-full min-h-0 relative">
-               <ResponsiveContainer width="100%" height="100%">
-                  {timeRange === '实时' ? (
-                    <AreaChart data={chartData} margin={{ top: 80, right: 10, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-                          <stop offset="100%" stopColor="#ffffff" stopOpacity={0.05}/>
-                        </linearGradient>
-                        <filter id="bubble-shadow" x="-20%" y="-20%" width="140%" height="140%">
-                          <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.2"/>
-                        </filter>
-                      </defs>
-                      <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
-                      
-                      {/* X Axis */}
-                      <XAxis 
-                        dataKey="time" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{fontSize: 11, fill: '#94a3b8'}} 
-                        ticks={['09:30', '11:30', '15:00']}
-                        tickFormatter={formatXAxis}
-                      />
-                      
-                      {/* Left Y Axis: Price */}
-                      <YAxis 
-                        yAxisId="left"
-                        domain={yDomain} 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{fontSize: 11, fill: '#94a3b8'}} 
-                        tickFormatter={(val) => val.toFixed(3)}
-                        width={50}
-                      />
-                      
-                      {/* Right Y Axis: Percentage */}
-                      {!showCompetitor && (
-                        <YAxis 
-                          yAxisId="right"
-                          orientation="right"
-                          domain={[
-                             (dataMin: number) => (dataMin - preClose) / preClose,
-                             (dataMax: number) => (dataMax - preClose) / preClose
-                          ]}
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{fontSize: 11, fill: '#94a3b8'}} 
-                          tickFormatter={(val) => `${(val * 100).toFixed(2)}%`}
-                          width={45}
-                        />
-                      )}
+                          <Tooltip content={<CustomTooltip />} />
+                          
+                          {/* Main Price Area/Line */}
+                          {!showCompetitor ? (
+                            <Area 
+                              yAxisId="left"
+                              type="monotone" 
+                              dataKey="value" 
+                              stroke="#0e57b4" 
+                              fill="url(#colorPrice)" 
+                              strokeWidth={2} 
+                              name="价格" 
+                            />
+                          ) : (
+                            <Line 
+                              yAxisId="left"
+                              type="monotone" 
+                              dataKey="value" 
+                              stroke="#0e57b4" 
+                              strokeWidth={2} 
+                              dot={false}
+                              name="价格" 
+                            />
+                          )}
 
-                      <Tooltip content={<CustomTooltip />} />
-                      
-                      {/* Main Price Area/Line */}
-                      {!showCompetitor ? (
-                        <Area 
-                          yAxisId="left"
-                          type="monotone" 
-                          dataKey="value" 
-                          stroke="#0e57b4" 
-                          fill="url(#colorPrice)" 
-                          strokeWidth={2} 
-                          name="价格" 
-                        />
+                          {/* IOPV Line (Solid Yellow) - Only when no competitor */}
+                          {!showCompetitor && (
+                            <Line 
+                              yAxisId="left"
+                              type="monotone" 
+                              dataKey="iopv" 
+                              stroke="#fbbf24" 
+                              strokeWidth={1.5} 
+                              dot={false} 
+                              name="IOPV" 
+                            />
+                          )}
+                          
+                          {/* Competitor Lines */}
+                          {selectedCompetitors.map((code, idx) => (
+                            <Line 
+                              yAxisId="left"
+                              key={code} 
+                              type="monotone" 
+                              dataKey={`competitors.${code}`} 
+                              stroke={idx === 0 ? "#94a3b8" : "#cbd5e1"} 
+                              strokeWidth={1} 
+                              dot={false} 
+                              name={competitors.find(c => c.code === code)?.name} 
+                            />
+                          ))}
+
+                          {/* Trigger Dot with Bubble (Only when no competitor and trigger exists) */}
+                          {!showCompetitor && triggerPoint && (
+                            <ReferenceDot 
+                              yAxisId="left" 
+                              x={triggerPoint.time} 
+                              y={triggerPoint.value} 
+                              r={4} 
+                              fill="#ef4444" 
+                              stroke="none"
+                              label={renderTriggerLabel}
+                            />
+                          )}
+
+                        </AreaChart>
                       ) : (
-                        <Line 
-                          yAxisId="left"
-                          type="monotone" 
-                          dataKey="value" 
-                          stroke="#0e57b4" 
-                          strokeWidth={2} 
-                          dot={false}
-                          name="价格" 
-                        />
+                        // Historical Chart (No IOPV)
+                        <AreaChart data={chartData} margin={{ top: 20, right: 55, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="colorHist" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
+                              <stop offset="100%" stopColor="#ffffff" stopOpacity={0.05}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
+                          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#94a3b8'}} minTickGap={30} />
+                          <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#94a3b8'}} tickFormatter={(v) => `${v.toFixed(0)}%`} width={50} />
+                          <Tooltip content={<CustomTooltip />} />
+                          
+                          {!showCompetitor ? (
+                            <Area 
+                              type="monotone" 
+                              dataKey="value" 
+                              stroke="#0e57b4" 
+                              fill="url(#colorHist)" 
+                              strokeWidth={2} 
+                              name="本产品" 
+                            />
+                          ) : (
+                            <Line 
+                              type="monotone" 
+                              dataKey="value" 
+                              stroke="#0e57b4" 
+                              strokeWidth={2} 
+                              dot={false} 
+                              name="本产品" 
+                            />
+                          )}
+                          
+                          {selectedCompetitors.map((code, idx) => (
+                            <Line 
+                              key={code} 
+                              type="monotone" 
+                              dataKey={`competitors.${code}`} 
+                              stroke={idx === 0 ? "#94a3b8" : "#cbd5e1"} 
+                              strokeWidth={1} 
+                              dot={false} 
+                              name={competitors.find(c => c.code === code)?.name} 
+                            />
+                          ))}
+                        </AreaChart>
                       )}
-
-                      {/* IOPV Line (Solid Yellow) - Only when no competitor */}
-                      {!showCompetitor && (
-                         <Line 
-                           yAxisId="left"
-                           type="monotone" 
-                           dataKey="iopv" 
-                           stroke="#fbbf24" 
-                           strokeWidth={1.5} 
-                           dot={false} 
-                           name="IOPV" 
-                         />
-                      )}
-                      
-                      {/* Competitor Lines */}
-                      {selectedCompetitors.map((code, idx) => (
-                         <Line 
-                           yAxisId="left"
-                           key={code} 
-                           type="monotone" 
-                           dataKey={`competitors.${code}`} 
-                           stroke={idx === 0 ? "#94a3b8" : "#cbd5e1"} 
-                           strokeWidth={1} 
-                           dot={false} 
-                           name={competitors.find(c => c.code === code)?.name} 
-                         />
-                      ))}
-
-                      {/* Trigger Dot with Bubble (Only when no competitor and trigger exists) */}
-                      {!showCompetitor && triggerPoint && (
-                        <ReferenceDot 
-                          yAxisId="left" 
-                          x={triggerPoint.time} 
-                          y={triggerPoint.value} 
-                          r={4} 
-                          fill="#ef4444" 
-                          stroke="none"
-                          label={renderTriggerLabel}
-                        />
-                      )}
-
-                    </AreaChart>
-                  ) : (
-                    // Historical Chart (No IOPV)
-                    <AreaChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 0 }}>
-                       <defs>
-                        <linearGradient id="colorHist" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-                          <stop offset="100%" stopColor="#ffffff" stopOpacity={0.05}/>
-                        </linearGradient>
-                      </defs>
-                       <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
-                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#94a3b8'}} minTickGap={30} />
-                       <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#94a3b8'}} tickFormatter={(v) => `${v.toFixed(0)}%`} width={50} />
-                       <Tooltip content={<CustomTooltip />} />
-                       
-                       {!showCompetitor ? (
-                         <Area 
-                           type="monotone" 
-                           dataKey="value" 
-                           stroke="#0e57b4" 
-                           fill="url(#colorHist)" 
-                           strokeWidth={2} 
-                           name="本产品" 
-                         />
-                       ) : (
-                         <Line 
-                           type="monotone" 
-                           dataKey="value" 
-                           stroke="#0e57b4" 
-                           strokeWidth={2} 
-                           dot={false} 
-                           name="本产品" 
-                         />
-                       )}
-                       
-                       {selectedCompetitors.map((code, idx) => (
-                         <Line 
-                           key={code} 
-                           type="monotone" 
-                           dataKey={`competitors.${code}`} 
-                           stroke={idx === 0 ? "#94a3b8" : "#cbd5e1"} 
-                           strokeWidth={1} 
-                           dot={false} 
-                           name={competitors.find(c => c.code === code)?.name} 
-                         />
-                      ))}
-                    </AreaChart>
-                  )}
-               </ResponsiveContainer>
+                  </ResponsiveContainer>
+                </div>
             </div>
             
-            {/* Tabs */}
-            <div className="flex justify-between items-center mt-4 border-t border-slate-100 pt-4">
+            {/* Tabs - Now Edge to Edge */}
+            <div className="flex justify-between items-center px-5 py-3 border-t border-slate-100 bg-slate-50/30">
               <div className="flex gap-1">
                  {['实时', '近1月', '近3月', '近6月'].map(t => (
                    <button 
@@ -504,6 +598,30 @@ const Analysis: React.FC = () => {
               </div>
             </div>
           </div>
+          
+          {/* NEW: Net Inflow Bar Chart (Only in Historical Mode) */}
+          {timeRange !== '实时' && (
+            <div className="bg-white rounded-md border border-slate-200 shadow-sm p-5 h-[200px] flex flex-col animate-in fade-in slide-in-from-top-4">
+               <h2 className="text-sm font-bold text-slate-800 mb-1">资金净流入</h2>
+               <p className="text-xs text-slate-500 mb-4">单位：万元</p>
+               <div className="flex-1 w-full min-h-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                     <BarChart data={MOCK_INFLOW_DATA} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f5f9" />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#94a3b8'}} />
+                        <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#94a3b8'}} width={50} />
+                        <Tooltip 
+                           cursor={{fill: '#f8fafc'}}
+                           contentStyle={{borderRadius: '4px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px'}}
+                           formatter={(value: number) => [`${value}万元`, '净流入']}
+                        />
+                        <ReferenceLine y={0} stroke="#cbd5e1" />
+                        <Bar dataKey="value" fill="#0e57b4" barSize={30} radius={[2, 2, 2, 2]} />
+                     </BarChart>
+                  </ResponsiveContainer>
+               </div>
+            </div>
+          )}
 
           {/* Add Comparison Bar */}
           <div className="flex items-center gap-3">
@@ -528,23 +646,24 @@ const Analysis: React.FC = () => {
         <div className="col-span-12 lg:col-span-5 space-y-4">
            {/* Comparison Table */}
            <div className="bg-white rounded-md border border-slate-200 shadow-sm p-5">
-              <h2 className="text-sm font-bold text-slate-800 mb-4">横向对比</h2>
+              <h2 className="text-sm font-bold text-slate-800 mb-4">核心指标</h2>
               <div className="overflow-x-auto">
                  <table className="w-full text-xs">
                     <thead>
                        <tr>
                          <th className="text-left py-2 px-2 text-slate-400 font-medium w-20">指标</th>
-                         {/* Columns: Self + Selected Competitors (Max 2) */}
+                         {/* Columns: Self Only */}
                          <th className="text-right py-2 px-2 text-[#0e57b4] font-bold">
                            {selfProduct?.name.replace('ETF', '')} <span className="bg-[#eef6ff] text-[10px] px-1 rounded ml-1">我司</span>
                          </th>
-                         {selectedCompetitors.slice(0, 2).map(code => {
-                           const c = competitors.find(cmp => cmp.code === code);
-                           return (
-                             <th key={code} className="text-right py-2 px-2 text-slate-600 font-medium">
-                               {c?.name.replace('ETF', '')}
-                             </th>
-                           );
+                         {/* Selected Competitors Headers */}
+                         {selectedCompetitors.map(code => {
+                            const comp = competitors.find(c => c.code === code);
+                            return (
+                              <th key={code} className="text-right py-2 px-2 text-slate-600 font-bold border-l border-dashed border-slate-100">
+                                {comp?.name.replace('ETF', '')}
+                              </th>
+                            )
                          })}
                        </tr>
                     </thead>
@@ -560,16 +679,16 @@ const Analysis: React.FC = () => {
                                  : (selfProduct as any)?.[metric.key] || '-'}
                             </td>
 
-                            {/* Competitor Values */}
-                            {selectedCompetitors.slice(0, 2).map(code => {
-                               const c = competitors.find(cmp => cmp.code === code);
-                               return (
-                                 <td key={code} className="py-3 px-2 text-right font-mono text-slate-500">
-                                   {c && (metric.format 
-                                     ? metric.format((c as any)[metric.key]) 
-                                     : (c as any)[metric.key])}
-                                 </td>
-                               );
+                            {/* Selected Competitors Values */}
+                            {selectedCompetitors.map(code => {
+                                const comp = competitors.find(c => c.code === code);
+                                return (
+                                  <td key={code} className="py-3 px-2 text-right font-mono text-slate-600 border-l border-dashed border-slate-100">
+                                     {metric.format 
+                                       ? metric.format((comp as any)?.[metric.key]) 
+                                       : (comp as any)?.[metric.key] || '-'}
+                                  </td>
+                                )
                             })}
                          </tr>
                        ))}

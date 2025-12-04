@@ -1,3 +1,4 @@
+
 import { HotspotEvent, HotspotStatus, MarketIndex, NewsItem, CompetitorData, ChartPoint, PanoramaData, InfoItem, CopyItem } from './types';
 
 export const MOCK_INDICES: MarketIndex[] = [
@@ -32,6 +33,18 @@ export const MOCK_INDICES: MarketIndex[] = [
 ];
 
 export const MOCK_HOTSPOTS: HotspotEvent[] = [
+  {
+    id: 'new-dividend',
+    time: '14:09',
+    code: '515180',
+    name: '红利ETF易方达',
+    triggerReason: '巨额流入',
+    triggerType: 'INFLOW',
+    metricValue: '净流入1.4亿',
+    status: HotspotStatus.PENDING,
+    isSelfSelect: true,
+    description: '盘中净流入额达14000万元，资金抢筹迹象明显，成交额显著放大。'
+  },
   {
     id: '15',
     time: '14:55',
@@ -241,10 +254,9 @@ export const MOCK_NEWS: NewsItem[] = [
   }
 ];
 
-// --- REALISTIC INDUSTRY NEWS DATA ---
-
 // Map Product Codes to Industry Categories
 const PRODUCT_CATEGORY_MAP: Record<string, string> = {
+  '515180': 'DIVIDEND',  // 红利ETF易方达
   '512690': 'LIQUOR',    // 酒ETF
   '512480': 'SEMI',      // 半导体ETF
   '159995': 'SEMI',      // 芯片ETF
@@ -282,6 +294,31 @@ export const getProductNameByCode = (code: string) => {
 
 // News Database
 const NEWS_DATABASE: Record<string, { news: InfoItem[], announcements: InfoItem[] }> = {
+  'DIVIDEND': {
+     news: [
+        { id: 'div1', date: '12-03', tag: '资金', title: '易方达中证红利ETF(515180)连续3日获净申购，区间流入2.78亿' },
+        { id: 'div2', date: '12-02', tag: '资讯', title: '“红利+”指数小幅回调，关注红利ETF易方达(515180)配置价值' },
+        { id: 'div3', date: '11-28', tag: '行情', title: '11月28日易方达中证红利ETF涨0.22%，份额增加6400万份' },
+        { id: 'div4', date: '11-25', tag: '榜单', title: '资金榜居首！红利ETF易方达(515180)单日净流入1.07亿元' },
+        { id: 'div5', date: '10-15', tag: '资讯', title: '10月资金加速布局，易方达515180规模突破百亿大关' },
+        { id: 'div6', date: '10-08', tag: '研报', title: '中信证券看好红利板块，推荐易方达515180等ETF布局' },
+        { id: 'div7', date: '09-15', tag: '资讯', title: '红利板块防御属性凸显，易方达515180获北向资金关注' },
+        { id: 'div8', date: '08-25', tag: '异动', title: '红利股走强，红利ETF易方达(515180)冲击3连阳' }
+     ],
+     announcements: [
+        { id: 'diva1', date: '12-03', tag: '公告', title: '关于网上交易平台系统维护的通知' },
+        { id: 'diva2', date: '11-28', tag: '公告', title: '易方达基金管理有限公司关于旗下基金关联交易事项的公告' },
+        { id: 'diva3', date: '11-27', tag: '公告', title: '易方达中证红利交易型开放式指数证券投资基金更新的招募说明书' },
+        { id: 'diva4', date: '11-27', tag: '公告', title: '易方达中证红利交易型开放式指数证券投资基金基金产品资料概要更新' },
+        { id: 'diva5', date: '11-24', tag: '公告', title: '关于旗下部分上交所ETF申购赎回清单版本更新的公告' },
+        { id: 'diva6', date: '11-20', tag: '公告', title: '关于易方达网上交易平台暂停快速赎回业务的通知' },
+        { id: 'diva7', date: '11-20', tag: '公告', title: '关于同意国泰海通证券股份有限公司为易方达中证红利ETF提供做市服务' },
+        { id: 'diva8', date: '11-19', tag: '公告', title: '关于同意中国银河证券股份有限公司为易方达中证红利ETF提供做市服务' },
+        { id: 'diva9', date: '11-18', tag: '公告', title: '易方达中证红利ETF基金产品资料概要更新' },
+        { id: 'diva10', date: '11-13', tag: '公告', title: '关于同意国信证券股份有限公司为易方达中证红利ETF提供主做市服务' },
+        { id: 'diva11', date: '11-03', tag: '公告', title: '易方达基金管理有限公司旗下部分ETF增加中航证券为一级交易商的公告' }
+     ]
+  },
   'SEMI': {
     news: [
       { id: 's1', date: '11-28', tag: '资讯', title: '大基金三期已向华力微电子注资，半导体设备国产化加速' },
@@ -457,6 +494,19 @@ export const getNewsForProduct = (code: string) => {
 export const MOCK_INFO_LEFT = NEWS_DATABASE['BROAD'].news;
 export const MOCK_INFO_RIGHT = NEWS_DATABASE['BROAD'].announcements;
 
+// --- REAL DATA INJECTION ---
+// Source Data provided by user
+const REAL_DATA_SOURCES: Record<string, { date: string, value: number }[]> = {
+  '515180': [ // 红利ETF易方达
+    { date: "2025-06-03", value: 1.305 }, { date: "2025-06-04", value: 1.31 }, { date: "2025-06-05", value: 1.304 }, { date: "2025-06-06", value: 1.305 }, { date: "2025-06-09", value: 1.307 }, { date: "2025-06-10", value: 1.308 }, { date: "2025-06-11", value: 1.315 }, { date: "2025-06-12", value: 1.315 }, { date: "2025-06-13", value: 1.307 }, { date: "2025-06-16", value: 1.309 }, { date: "2025-06-17", value: 1.308 }, { date: "2025-06-18", value: 1.31 }, { date: "2025-06-19", value: 1.301 }, { date: "2025-06-20", value: 1.307 }, { date: "2025-06-23", value: 1.312 }, { date: "2025-06-24", value: 1.314 }, { date: "2025-06-25", value: 1.322 }, { date: "2025-06-26", value: 1.322 }, { date: "2025-06-27", value: 1.319 }, { date: "2025-06-30", value: 1.319 }, { date: "2025-07-01", value: 1.327 }, { date: "2025-07-02", value: 1.338 }, { date: "2025-07-03", value: 1.339 }, { date: "2025-07-04", value: 1.345 }, { date: "2025-07-07", value: 1.353 }, { date: "2025-07-08", value: 1.353 }, { date: "2025-07-09", value: 1.359 }, { date: "2025-07-10", value: 1.366 }, { date: "2025-07-11", value: 1.361 }, { date: "2025-07-14", value: 1.369 }, { date: "2025-07-15", value: 1.355 }, { date: "2025-07-16", value: 1.35 }, { date: "2025-07-17", value: 1.348 }, { date: "2025-07-18", value: 1.354 }, { date: "2025-07-21", value: 1.372 }, { date: "2025-07-22", value: 1.394 }, { date: "2025-07-23", value: 1.39 }, { date: "2025-07-24", value: 1.394 }, { date: "2025-07-25", value: 1.386 }, { date: "2025-07-28", value: 1.374 }, { date: "2025-07-29", value: 1.372 }, { date: "2025-07-30", value: 1.377 }, { date: "2025-07-31", value: 1.354 }, { date: "2025-08-01", value: 1.354 }, { date: "2025-08-04", value: 1.358 }, { date: "2025-08-05", value: 1.372 }, { date: "2025-08-06", value: 1.381 }, { date: "2025-08-07", value: 1.384 }, { date: "2025-08-08", value: 1.388 }, { date: "2025-08-11", value: 1.383 }, { date: "2025-08-12", value: 1.388 }, { date: "2025-08-13", value: 1.381 }, { date: "2025-08-14", value: 1.367 }, { date: "2025-08-15", value: 1.371 }, { date: "2025-08-18", value: 1.368 }, { date: "2025-08-19", value: 1.365 }, { date: "2025-08-20", value: 1.375 }, { date: "2025-08-21", value: 1.383 }, { date: "2025-08-22", value: 1.383 }, { date: "2025-08-25", value: 1.392 }, { date: "2025-08-26", value: 1.389 }, { date: "2025-08-27", value: 1.366 }, { date: "2025-08-28", value: 1.366 }, { date: "2025-08-29", value: 1.367 }, { date: "2025-09-01", value: 1.365 }, { date: "2025-09-02", value: 1.367 }, { date: "2025-09-03", value: 1.356 }, { date: "2025-09-04", value: 1.355 }, { date: "2025-09-05", value: 1.36 }, { date: "2025-09-08", value: 1.37 }, { date: "2025-09-09", value: 1.372 }, { date: "2025-09-10", value: 1.366 }, { date: "2025-09-11", value: 1.373 }, { date: "2025-09-12", value: 1.365 }, { date: "2025-09-15", value: 1.362 }, { date: "2025-09-16", value: 1.361 }, { date: "2025-09-17", value: 1.365 }, { date: "2025-09-18", value: 1.343 }, { date: "2025-09-19", value: 1.352 }, { date: "2025-09-22", value: 1.343 }, { date: "2025-09-23", value: 1.347 }, { date: "2025-09-24", value: 1.352 }, { date: "2025-09-25", value: 1.345 }, { date: "2025-09-26", value: 1.348 }, { date: "2025-09-29", value: 1.356 }, { date: "2025-09-30", value: 1.354 }, { date: "2025-10-09", value: 1.361 }, { date: "2025-10-10", value: 1.375 }, { date: "2025-10-13", value: 1.372 }, { date: "2025-10-14", value: 1.385 }, { date: "2025-10-15", value: 1.39 }, { date: "2025-10-16", value: 1.399 }, { date: "2025-10-17", value: 1.387 }, { date: "2025-10-20", value: 1.398 }, { date: "2025-10-21", value: 1.396 }, { date: "2025-10-22", value: 1.4 }, { date: "2025-10-23", value: 1.409 }, { date: "2025-10-24", value: 1.402 }, { date: "2025-10-27", value: 1.41 }, { date: "2025-10-28", value: 1.402 }, { date: "2025-10-29", value: 1.402 }, { date: "2025-10-30", value: 1.397 }, { date: "2025-10-31", value: 1.398 }, { date: "2025-11-03", value: 1.408 }, { date: "2025-11-04", value: 1.414 }, { date: "2025-11-05", value: 1.421 }, { date: "2025-11-06", value: 1.426 }, { date: "2025-11-07", value: 1.426 }, { date: "2025-11-10", value: 1.438 }, { date: "2025-11-11", value: 1.434 }, { date: "2025-11-12", value: 1.437 }, { date: "2025-11-13", value: 1.44 }, { date: "2025-11-14", value: 1.433 }, { date: "2025-11-17", value: 1.424 }, { date: "2025-11-18", value: 1.406 }, { date: "2025-11-19", value: 1.407 }, { date: "2025-11-20", value: 1.404 }, { date: "2025-11-21", value: 1.382 }, { date: "2025-11-24", value: 1.374 }, { date: "2025-11-25", value: 1.381 }, { date: "2025-11-26", value: 1.373 }, { date: "2025-11-27", value: 1.375 }, { date: "2025-11-28", value: 1.378 }, { date: "2025-12-01", value: 1.388 }, { date: "2025-12-02", value: 1.386 }, { date: "2025-12-03", value: 1.384 }
+  ],
+  '515890': [ // 红利ETF博时
+    { date: "2025-06-03", value: 1.389 }, { date: "2025-06-04", value: 1.394 }, { date: "2025-06-05", value: 1.385 }, { date: "2025-06-06", value: 1.386 }, { date: "2025-06-09", value: 1.392 }, { date: "2025-06-10", value: 1.39 }, { date: "2025-06-11", value: 1.396 }, { date: "2025-06-12", value: 1.399 }, { date: "2025-06-13", value: 1.39 }, { date: "2025-06-16", value: 1.391 }, { date: "2025-06-17", value: 1.39 }, { date: "2025-06-18", value: 1.393 }, { date: "2025-06-19", value: 1.381 }, { date: "2025-06-20", value: 1.387 }, { date: "2025-06-23", value: 1.393 }, { date: "2025-06-24", value: 1.396 }, { date: "2025-06-25", value: 1.406 }, { date: "2025-06-26", value: 1.412 }, { date: "2025-06-27", value: 1.4 }, { date: "2025-06-30", value: 1.402 }, { date: "2025-07-01", value: 1.412 }, { date: "2025-07-02", value: 1.421 }, { date: "2025-07-03", value: 1.422 }, { date: "2025-07-04", value: 1.43 }, { date: "2025-07-07", value: 1.438 }, { date: "2025-07-08", value: 1.438 }, { date: "2025-07-09", value: 1.444 }, { date: "2025-07-10", value: 1.454 }, { date: "2025-07-11", value: 1.448 }, { date: "2025-07-14", value: 1.455 }, { date: "2025-07-15", value: 1.439 }, { date: "2025-07-16", value: 1.432 }, { date: "2025-07-17", value: 1.433 }, { date: "2025-07-18", value: 1.44 }, { date: "2025-07-21", value: 1.458 }, { date: "2025-07-22", value: 1.484 }, { date: "2025-07-23", value: 1.477 }, { date: "2025-07-24", value: 1.483 }, { date: "2025-07-25", value: 1.475 }, { date: "2025-07-28", value: 1.463 }, { date: "2025-07-29", value: 1.46 }, { date: "2025-07-30", value: 1.464 }, { date: "2025-07-31", value: 1.442 }, { date: "2025-08-01", value: 1.44 }, { date: "2025-08-04", value: 1.444 }, { date: "2025-08-05", value: 1.457 }, { date: "2025-08-06", value: 1.468 }, { date: "2025-08-07", value: 1.471 }, { date: "2025-08-08", value: 1.474 }, { date: "2025-08-11", value: 1.468 }, { date: "2025-08-12", value: 1.475 }, { date: "2025-08-13", value: 1.471 }, { date: "2025-08-14", value: 1.456 }, { date: "2025-08-15", value: 1.459 }, { date: "2025-08-18", value: 1.454 }, { date: "2025-08-19", value: 1.452 }, { date: "2025-08-20", value: 1.464 }, { date: "2025-08-21", value: 1.47 }, { date: "2025-08-22", value: 1.469 }, { date: "2025-08-25", value: 1.478 }, { date: "2025-08-26", value: 1.478 }, { date: "2025-08-27", value: 1.453 }, { date: "2025-08-28", value: 1.454 }, { date: "2025-08-29", value: 1.459 }, { date: "2025-09-01", value: 1.45 }, { date: "2025-09-02", value: 1.454 }, { date: "2025-09-03", value: 1.442 }, { date: "2025-09-04", value: 1.442 }, { date: "2025-09-05", value: 1.444 }, { date: "2025-09-08", value: 1.458 }, { date: "2025-09-09", value: 1.459 }, { date: "2025-09-10", value: 1.454 }, { date: "2025-09-11", value: 1.457 }, { date: "2025-09-12", value: 1.454 }, { date: "2025-09-15", value: 1.448 }, { date: "2025-09-16", value: 1.45 }, { date: "2025-09-17", value: 1.45 }, { date: "2025-09-18", value: 1.43 }, { date: "2025-09-19", value: 1.44 }, { date: "2025-09-22", value: 1.429 }, { date: "2025-09-23", value: 1.434 }, { date: "2025-09-24", value: 1.436 }, { date: "2025-09-25", value: 1.434 }, { date: "2025-09-26", value: 1.437 }, { date: "2025-09-29", value: 1.443 }, { date: "2025-09-30", value: 1.442 }, { date: "2025-10-09", value: 1.449 }, { date: "2025-10-10", value: 1.466 }, { date: "2025-10-13", value: 1.462 }, { date: "2025-10-14", value: 1.478 }, { date: "2025-10-15", value: 1.478 }, { date: "2025-10-16", value: 1.487 }, { date: "2025-10-17", value: 1.477 }, { date: "2025-10-20", value: 1.488 }, { date: "2025-10-21", value: 1.487 }, { date: "2025-10-22", value: 1.491 }, { date: "2025-10-23", value: 1.501 }, { date: "2025-10-24", value: 1.493 }, { date: "2025-10-27", value: 1.5 }, { date: "2025-10-28", value: 1.49 }, { date: "2025-10-29", value: 1.492 }, { date: "2025-10-30", value: 1.489 }, { date: "2025-10-31", value: 1.486 }, { date: "2025-11-03", value: 1.502 }, { date: "2025-11-04", value: 1.506 }, { date: "2025-11-05", value: 1.514 }, { date: "2025-11-06", value: 1.519 }, { date: "2025-11-07", value: 1.521 }, { date: "2025-11-10", value: 1.531 }, { date: "2025-11-11", value: 1.531 }, { date: "2025-11-12", value: 1.533 }, { date: "2025-11-13", value: 1.535 }, { date: "2025-11-14", value: 1.536 }, { date: "2025-11-17", value: 1.516 }, { date: "2025-11-18", value: 1.496 }, { date: "2025-11-19", value: 1.502 }, { date: "2025-11-20", value: 1.498 }, { date: "2025-11-21", value: 1.471 }, { date: "2025-11-24", value: 1.464 }, { date: "2025-11-25", value: 1.471 }, { date: "2025-11-26", value: 1.464 }, { date: "2025-11-27", value: 1.471 }, { date: "2025-11-28", value: 1.468 }, { date: "2025-12-01", value: 1.481 }, { date: "2025-12-02", value: 1.479 }, { date: "2025-12-03", value: 1.475 }
+  ],
+  '560020': [ // 红利ETF汇添富
+    { date: "2025-06-03", value: 1.033 }, { date: "2025-06-04", value: 1.036 }, { date: "2025-06-05", value: 1.033 }, { date: "2025-06-06", value: 1.032 }, { date: "2025-06-09", value: 1.034 }, { date: "2025-06-10", value: 1.035 }, { date: "2025-06-11", value: 1.039 }, { date: "2025-06-12", value: 1.042 }, { date: "2025-06-13", value: 1.036 }, { date: "2025-06-16", value: 1.035 }, { date: "2025-06-17", value: 1.035 }, { date: "2025-06-18", value: 1.036 }, { date: "2025-06-19", value: 1.029 }, { date: "2025-06-20", value: 1.031 }, { date: "2025-06-23", value: 1.038 }, { date: "2025-06-24", value: 1.039 }, { date: "2025-06-25", value: 1.044 }, { date: "2025-06-26", value: 1.048 }, { date: "2025-06-27", value: 1.044 }, { date: "2025-06-30", value: 1.044 }, { date: "2025-07-01", value: 1.05 }, { date: "2025-07-02", value: 1.059 }, { date: "2025-07-03", value: 1.058 }, { date: "2025-07-04", value: 1.064 }, { date: "2025-07-07", value: 1.069 }, { date: "2025-07-08", value: 1.068 }, { date: "2025-07-09", value: 1.072 }, { date: "2025-07-10", value: 1.082 }, { date: "2025-07-11", value: 1.078 }, { date: "2025-07-14", value: 1.082 }, { date: "2025-07-15", value: 1.07 }, { date: "2025-07-16", value: 1.068 }, { date: "2025-07-17", value: 1.065 }, { date: "2025-07-18", value: 1.069 }, { date: "2025-07-21", value: 1.085 }, { date: "2025-07-22", value: 1.1 }, { date: "2025-07-23", value: 1.096 }, { date: "2025-07-24", value: 1.103 }, { date: "2025-07-25", value: 1.097 }, { date: "2025-07-28", value: 1.088 }, { date: "2025-07-29", value: 1.083 }, { date: "2025-07-30", value: 1.087 }, { date: "2025-07-31", value: 1.07 }, { date: "2025-08-01", value: 1.067 }, { date: "2025-08-04", value: 1.072 }, { date: "2025-08-05", value: 1.084 }, { date: "2025-08-06", value: 1.091 }, { date: "2025-08-07", value: 1.093 }, { date: "2025-08-08", value: 1.095 }, { date: "2025-08-11", value: 1.089 }, { date: "2025-08-12", value: 1.094 }, { date: "2025-08-13", value: 1.091 }, { date: "2025-08-14", value: 1.081 }, { date: "2025-08-15", value: 1.083 }, { date: "2025-08-18", value: 1.082 }, { date: "2025-08-19", value: 1.079 }, { date: "2025-08-20", value: 1.085 }, { date: "2025-08-21", value: 1.092 }, { date: "2025-08-22", value: 1.092 }, { date: "2025-08-25", value: 1.099 }, { date: "2025-08-26", value: 1.095 }, { date: "2025-08-27", value: 1.08 }, { date: "2025-08-28", value: 1.078 }, { date: "2025-08-29", value: 1.082 }, { date: "2025-09-01", value: 1.078 }, { date: "2025-09-02", value: 1.079 }, { date: "2025-09-03", value: 1.069 }, { date: "2025-09-04", value: 1.071 }, { date: "2025-09-05", value: 1.075 }, { date: "2025-09-08", value: 1.083 }, { date: "2025-09-09", value: 1.084 }, { date: "2025-09-10", value: 1.078 }, { date: "2025-09-11", value: 1.082 }, { date: "2025-09-12", value: 1.078 }, { date: "2025-09-15", value: 1.073 }, { date: "2025-09-16", value: 1.073 }, { date: "2025-09-17", value: 1.079 }, { date: "2025-09-18", value: 1.058 }, { date: "2025-09-19", value: 1.069 }, { date: "2025-09-22", value: 1.062 }, { date: "2025-09-23", value: 1.065 }, { date: "2025-09-24", value: 1.066 }, { date: "2025-09-25", value: 1.065 }, { date: "2025-09-26", value: 1.066 }, { date: "2025-09-29", value: 1.068 }, { date: "2025-09-30", value: 1.068 }, { date: "2025-10-09", value: 1.073 }, { date: "2025-10-10", value: 1.087 }, { date: "2025-10-13", value: 1.085 }, { date: "2025-10-14", value: 1.092 }, { date: "2025-10-15", value: 1.101 }, { date: "2025-10-16", value: 1.101 }, { date: "2025-10-17", value: 1.094 }, { date: "2025-10-20", value: 1.099 }, { date: "2025-10-21", value: 1.104 }, { date: "2025-10-22", value: 1.104 }, { date: "2025-10-23", value: 1.114 }, { date: "2025-10-24", value: 1.108 }, { date: "2025-10-27", value: 1.111 }, { date: "2025-10-28", value: 1.106 }, { date: "2025-10-29", value: 1.105 }, { date: "2025-10-30", value: 1.101 }, { date: "2025-10-31", value: 1.099 }, { date: "2025-11-03", value: 1.113 }, { date: "2025-11-04", value: 1.117 }, { date: "2025-11-05", value: 1.121 }, { date: "2025-11-06", value: 1.123 }, { date: "2025-11-07", value: 1.128 }, { date: "2025-11-10", value: 1.135 }, { date: "2025-11-11", value: 1.132 }, { date: "2025-11-12", value: 1.134 }, { date: "2025-11-13", value: 1.136 }, { date: "2025-11-14", value: 1.129 }, { date: "2025-11-17", value: 1.122 }, { date: "2025-11-18", value: 1.108 }, { date: "2025-11-19", value: 1.111 }, { date: "2025-11-20", value: 1.11 }, { date: "2025-11-21", value: 1.085 }, { date: "2025-11-24", value: 1.084 }, { date: "2025-11-25", value: 1.087 }, { date: "2025-11-26", value: 1.084 }, { date: "2025-11-27", value: 1.085 }, { date: "2025-11-28", value: 1.087 }, { date: "2025-12-01", value: 1.094 }, { date: "2025-12-02", value: 1.091 }, { date: "2025-12-03", value: 1.093 }
+  ]
+};
 
 export const MOCK_COMPETITORS: CompetitorData[] = [
   {
@@ -500,10 +550,13 @@ export const MOCK_COMPETITORS: CompetitorData[] = [
   }
 ];
 
-// Expanded Competitor DB for generic fallback
-// In a real app, this would be API driven.
 const COMPETITOR_DATABASE: Record<string, CompetitorData[]> = {
     'SEMI': MOCK_COMPETITORS,
+    'DIVIDEND': [
+      { name: '红利ETF易方达 (我司)', code: '515180', currentPrice: 1.384, volume: '1.5亿', premiumRate: '0.15%', netInflow: '+1.4亿', scale: '150亿', marketShare: '35%', change1M: '+0.43%', inflow1M: '+8亿', isLeader: true },
+      { name: '红利ETF博时', code: '515890', currentPrice: 1.475, volume: '0.5亿', premiumRate: '0.05%', netInflow: '+0.2亿', scale: '60亿', marketShare: '15%', change1M: '+0.47%', inflow1M: '+2亿', isLeader: false },
+      { name: '红利ETF汇添富', code: '560020', currentPrice: 1.093, volume: '0.3亿', premiumRate: '-0.1%', netInflow: '-0.1亿', scale: '40亿', marketShare: '10%', change1M: '-1.8%', inflow1M: '-0.5亿', isLeader: false }
+    ],
     'LIQUOR': [
         { name: '酒ETF (我司)', code: '512690', currentPrice: 0.75, volume: '5.5亿', premiumRate: '0.1%', netInflow: '+0.5亿', scale: '120亿', marketShare: '55%', change1M: '+2%', inflow1M: '+5亿', isLeader: true },
         { name: '食品饮料ETF', code: '515170', currentPrice: 0.82, volume: '2.1亿', premiumRate: '0.0%', netInflow: '+0.1亿', scale: '50亿', marketShare: '20%', change1M: '+1.5%', inflow1M: '+1亿', isLeader: false },
@@ -541,21 +594,23 @@ export const getCompetitorsForProduct = (code: string): CompetitorData[] => {
 export const generateChartData = (competitors: CompetitorData[] = [], triggerTime: string = '10:42'): ChartPoint[] => {
   const points: ChartPoint[] = [];
   
-  // Find self
-  const selfProduct = competitors.find(c => c.isLeader) || competitors[0] || { currentPrice: 1.0 };
-  let value = selfProduct.currentPrice || 1.338;
+  const selfProduct = competitors.find(c => c.isLeader) || competitors[0] || { currentPrice: 1.0, code: '000000' };
   
-  // Initialize mock values for each competitor based on their current price
+  // Use last available Real Data point if available for 515180, otherwise default mock logic
+  // 515180 12-02 price is 1.386, so that's the pre-close.
+  let value = selfProduct.code === '515180' ? 1.386 : (selfProduct.currentPrice || 1.338);
+  
   const compValues: Record<string, number> = {};
   competitors.forEach(c => {
-    // Only init for competitors, not self (though self is also in the list, logic handles it)
     if (!c.isLeader) {
-       compValues[c.code] = c.currentPrice || 1.0;
+       // If specific competitor code in Real Data Source, use its pre-close (approx)
+       if (c.code === '515890') compValues[c.code] = 1.479;
+       else if (c.code === '560020') compValues[c.code] = 1.091;
+       else compValues[c.code] = c.currentPrice || 1.0;
     }
   });
 
   // Morning Session: 09:30 - 11:30
-  // 121 points (inclusive of start and end minute)
   for (let i = 0; i <= 120; i++) {
     const d = new Date();
     d.setHours(9, 30 + i, 0, 0);
@@ -563,17 +618,10 @@ export const generateChartData = (competitors: CompetitorData[] = [], triggerTim
     const m = d.getMinutes().toString().padStart(2, '0');
     const timeStr = `${h}:${m}`;
     
-    // Random walk for self (Price)
-    // Slightly increased volatility for better demo
     value = value * (1 + (Math.random() - 0.45) * 0.004);
-    
-    // Calculate IOPV based on Price with a small random spread/noise
-    // IOPV should tightly track Price (Arbitrage mechanics)
-    // Spread e.g. -0.1% to +0.1%
     const spreadNoise = (Math.random() - 0.5) * 0.002; 
     const iopv = value * (1 + spreadNoise);
     
-    // Random walk for competitors
     const currentCompValues: Record<string, number> = {};
     Object.keys(compValues).forEach(code => {
       compValues[code] = compValues[code] * (1 + (Math.random() - 0.45) * 0.003);
@@ -601,8 +649,6 @@ export const generateChartData = (competitors: CompetitorData[] = [], triggerTim
     const timeStr = `${h}:${m}`;
     
     value = value * (1 + (Math.random() - 0.45) * 0.004);
-    
-    // Calculate IOPV based on Price (tight tracking)
     const spreadNoise = (Math.random() - 0.5) * 0.002;
     const iopv = value * (1 + spreadNoise);
 
@@ -630,50 +676,99 @@ export const generateChartData = (competitors: CompetitorData[] = [], triggerTim
 // Generate Historical Data (Daily Cumulative %)
 export const generateHistoricalData = (range: string, competitors: CompetitorData[] = []): { date: string; value: number; competitors: Record<string, number> }[] => {
   const points: { date: string; value: number; competitors: Record<string, number> }[] = [];
-  let days = 30; // Default 1M
-  if (range === '近3月') days = 90;
-  if (range === '近6月') days = 180;
-  if (range === '更多') days = 365;
-
-  let value = 0; // Cumulative percent starts at 0
   
-  // Initialize competitor values at 0
-  const compValues: Record<string, number> = {};
-  competitors.forEach(c => {
-    if (!c.isLeader) compValues[c.code] = 0;
-  });
+  // Use REAL Data if available for the leader
+  const leader = competitors.find(c => c.isLeader);
+  const realData = leader && REAL_DATA_SOURCES[leader.code];
 
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - days);
+  if (realData) {
+     // Calculate slice days
+     let days = 30;
+     if (range === '近3月') days = 90;
+     if (range === '近6月') days = 180;
+     if (range === '更多') days = 365;
 
-  for (let i = 0; i <= days; i++) {
-    const d = new Date(startDate);
-    d.setDate(startDate.getDate() + i);
-    const dateStr = d.toISOString().split('T')[0]; // YYYY-MM-DD
-    
-    // Random walk for cumulative percentage (Self)
-    value = value + (Math.random() - 0.45) * 1.5; 
+     // Ensure we don't exceed data length
+     const endIndex = realData.length;
+     const startIndex = Math.max(0, endIndex - days);
+     const slicedData = realData.slice(startIndex, endIndex);
 
-    // Random walk for competitors
-    const currentCompValues: Record<string, number> = {};
-    Object.keys(compValues).forEach(code => {
-        compValues[code] = compValues[code] + (Math.random() - 0.45) * 1.5;
-        currentCompValues[code] = Number(compValues[code].toFixed(2));
-    });
+     if (slicedData.length === 0) return [];
 
-    points.push({
-      date: dateStr,
-      value: Number(value.toFixed(2)),
-      competitors: currentCompValues
-    });
+     const baseValue = slicedData[0].value;
+
+     slicedData.forEach((item, idx) => {
+        // Calculate cumulative percentage for leader
+        const pctChange = ((item.value - baseValue) / baseValue) * 100;
+        
+        const currentCompValues: Record<string, number> = {};
+        
+        competitors.forEach(c => {
+           if (!c.isLeader) {
+              const compRealData = REAL_DATA_SOURCES[c.code];
+              if (compRealData) {
+                  // Find data for same date
+                  const match = compRealData.find(d => d.date === item.date);
+                  if (match) {
+                     // Need base value for this competitor too
+                     // Ideally base is at start of this specific range
+                     // Find index of start date in comp data
+                     const compStartVal = compRealData.find(d => d.date === slicedData[0].date)?.value || match.value;
+                     const compPct = ((match.value - compStartVal) / compStartVal) * 100;
+                     currentCompValues[c.code] = Number(compPct.toFixed(2));
+                  } else {
+                     currentCompValues[c.code] = 0;
+                  }
+              } else {
+                  // Fallback random if one comp has real data but other doesn't
+                  currentCompValues[c.code] = 0; 
+              }
+           }
+        });
+
+        points.push({
+           date: item.date,
+           value: Number(pctChange.toFixed(2)),
+           competitors: currentCompValues
+        });
+     });
+
+  } else {
+     // Fallback to Random Generation (Existing Logic)
+      let days = 30; 
+      if (range === '近3月') days = 90;
+      if (range === '近6月') days = 180;
+      if (range === '更多') days = 365;
+
+      let value = 0; 
+      const compValues: Record<string, number> = {};
+      competitors.forEach(c => { if (!c.isLeader) compValues[c.code] = 0; });
+
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - days);
+
+      for (let i = 0; i <= days; i++) {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i);
+        const dateStr = d.toISOString().split('T')[0];
+        
+        value = value + (Math.random() - 0.45) * 1.5; 
+        const currentCompValues: Record<string, number> = {};
+        Object.keys(compValues).forEach(code => {
+            compValues[code] = compValues[code] + (Math.random() - 0.45) * 1.5;
+            currentCompValues[code] = Number(compValues[code].toFixed(2));
+        });
+        points.push({ date: dateStr, value: Number(value.toFixed(2)), competitors: currentCompValues });
+      }
   }
+
   return points;
 };
 
-// Generator for Panorama Data (Full Market View)
 export const getMockPanoramaData = (): PanoramaData[] => {
   const extraProducts = [
+    { name: '红利ETF易方达', code: '515180', index: '中证红利' },
     { name: '医疗ETF', code: '512170', index: '中证医疗' },
     { name: '银行ETF', code: '512800', index: '中证银行' },
     { name: '传媒ETF', code: '512980', index: '中证传媒' },
@@ -693,15 +788,14 @@ export const getMockPanoramaData = (): PanoramaData[] => {
   ];
 
   const rnd = (min: number, max: number) => Number((Math.random() * (max - min) + min).toFixed(2));
-  const rndPct = () => Number((Math.random() * 6 - 3).toFixed(2)); // -3% to +3%
+  const rndPct = () => Number((Math.random() * 6 - 3).toFixed(2));
 
-  // 1. Map existing Hotspots to Panorama Data
   const hotspotData: PanoramaData[] = MOCK_HOTSPOTS.map(h => ({
     id: h.id,
     code: h.code,
     name: h.name,
-    trackingIndex: h.name.replace('ETF', '指数'), // Simple mock mapping
-    price: rnd(0.5, 3.5),
+    trackingIndex: h.name.replace('ETF', '指数'),
+    price: h.code === '515180' ? 1.384 : rnd(0.5, 3.5),
     changePercent: h.triggerType === 'PRICE' ? parseFloat(h.metricValue) : rndPct(),
     premiumRate: rnd(-0.2, 0.2),
     scale: rnd(10, 500),
@@ -709,20 +803,17 @@ export const getMockPanoramaData = (): PanoramaData[] => {
     turnoverRate: rnd(1, 15),
     triggerStatus: h.triggerReason,
     isSelfSelect: h.isSelfSelect,
-    
     changePrevDay: rndPct(),
     change1W: rndPct() * 2,
     change1M: rndPct() * 3,
     change3M: rndPct() * 4,
     changeYTD: rndPct() * 5,
     change1Y: rndPct() * 6,
-
     avgVol1W: rnd(1, 5),
     avgVol1M: rnd(1, 5),
     avgVol3M: rnd(1, 5),
     avgVolYTD: rnd(1, 5),
     avgVol1Y: rnd(1, 5),
-
     inflowPrevDay: h.triggerType === 'INFLOW' ? parseFloat(h.metricValue) : rnd(-0.5, 0.5),
     inflow1W: rnd(-2, 2),
     inflow1M: rnd(-5, 5),
@@ -731,7 +822,6 @@ export const getMockPanoramaData = (): PanoramaData[] => {
     inflow1Y: rnd(-30, 30),
   }));
 
-  // 2. Add extra products (Non-hotspot)
   const extraData: PanoramaData[] = extraProducts.map((p, i) => ({
     id: `extra-${i}`,
     code: p.code,
@@ -743,25 +833,19 @@ export const getMockPanoramaData = (): PanoramaData[] => {
     scale: rnd(5, 100),
     volume: rnd(0.1, 3),
     turnoverRate: rnd(0.5, 5),
-    triggerStatus: null, // No trigger
-    
-    // Deterministically set some extra products as self-selected for demo purposes
-    // Every 3rd item is self-selected
+    triggerStatus: null,
     isSelfSelect: i % 3 === 0, 
-
     changePrevDay: rndPct(),
     change1W: rndPct() * 2,
     change1M: rndPct() * 3,
     change3M: rndPct() * 4,
     changeYTD: rndPct() * 5,
     change1Y: rndPct() * 6,
-
     avgVol1W: rnd(0.5, 2),
     avgVol1M: rnd(0.5, 2),
     avgVol3M: rnd(0.5, 2),
     avgVolYTD: rnd(0.5, 2),
     avgVol1Y: rnd(0.5, 2),
-
     inflowPrevDay: rnd(-0.1, 0.1),
     inflow1W: rnd(-0.5, 0.5),
     inflow1M: rnd(-1, 1),
@@ -771,7 +855,6 @@ export const getMockPanoramaData = (): PanoramaData[] => {
   }));
 
   return [...hotspotData, ...extraData].sort((a, b) => {
-    // Put triggered ones first for demo visibility, but usually sorted by code or logic
     if (a.triggerStatus && !b.triggerStatus) return -1;
     if (!a.triggerStatus && b.triggerStatus) return 1;
     return 0;
