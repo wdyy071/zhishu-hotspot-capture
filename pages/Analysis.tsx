@@ -646,7 +646,7 @@ const Analysis: React.FC = () => {
         <div className="col-span-12 lg:col-span-5 space-y-4">
            {/* Comparison Table */}
            <div className="bg-white rounded-md border border-slate-200 shadow-sm p-5">
-              <h2 className="text-sm font-bold text-slate-800 mb-4">核心指标</h2>
+              <h2 className="text-sm font-bold text-slate-800 mb-4">横向指标对比</h2>
               <div className="overflow-x-auto">
                  <table className="w-full text-xs">
                     <thead>

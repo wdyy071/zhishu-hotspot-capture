@@ -553,9 +553,9 @@ export const MOCK_COMPETITORS: CompetitorData[] = [
 const COMPETITOR_DATABASE: Record<string, CompetitorData[]> = {
     'SEMI': MOCK_COMPETITORS,
     'DIVIDEND': [
-      { name: '红利ETF易方达 (我司)', code: '515180', currentPrice: 1.384, volume: '1.5亿', premiumRate: '0.15%', netInflow: '+1.4亿', scale: '150亿', marketShare: '35%', change1M: '+0.43%', inflow1M: '+8亿', isLeader: true },
-      { name: '红利ETF博时', code: '515890', currentPrice: 1.475, volume: '0.5亿', premiumRate: '0.05%', netInflow: '+0.2亿', scale: '60亿', marketShare: '15%', change1M: '+0.47%', inflow1M: '+2亿', isLeader: false },
-      { name: '红利ETF汇添富', code: '560020', currentPrice: 1.093, volume: '0.3亿', premiumRate: '-0.1%', netInflow: '-0.1亿', scale: '40亿', marketShare: '10%', change1M: '-1.8%', inflow1M: '-0.5亿', isLeader: false }
+      { name: '红利ETF易方达', code: '515180', currentPrice: 1.379, volume: '1.20亿', premiumRate: '-0.02%', netInflow: '+3600万', scale: '113.77亿', marketShare: '57%', change1M: '-1.72%', inflow1M: '+2.5亿', isLeader: true },
+      { name: '红利ETF博时', code: '515890', currentPrice: 1.473, volume: '414万', premiumRate: '0.06%', netInflow: '0万', scale: '4.73亿', marketShare: '2%', change1M: '-1.59%', inflow1M: '+0.1亿', isLeader: false },
+      { name: '中证红利ETF', code: '560020', currentPrice: 1.581, volume: '1.95亿', premiumRate: '0.10%', netInflow: '+1200万', scale: '81.93亿', marketShare: '41%', change1M: '-1.74%', inflow1M: '-1.2亿', isLeader: false }
     ],
     'LIQUOR': [
         { name: '酒ETF (我司)', code: '512690', currentPrice: 0.75, volume: '5.5亿', premiumRate: '0.1%', netInflow: '+0.5亿', scale: '120亿', marketShare: '55%', change1M: '+2%', inflow1M: '+5亿', isLeader: true },
